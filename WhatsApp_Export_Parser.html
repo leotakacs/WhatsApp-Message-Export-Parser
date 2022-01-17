@@ -1,0 +1,114 @@
+<title>WhatsApp Export Parser</title>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+</head>
+	<center>
+    <body>
+	</br>
+	</br>
+    <input type='file' accept='text/plain' onchange='openFile(event)'><br>
+	<textarea style="display:none" id="exp_input"></textarea>
+	</br>
+	</br>
+	<button onclick="parseText()">Parse</button>
+	</br>
+	</br>
+	<p id="total"></p>
+	</br>
+	</br>
+	
+	<div id="messageOut">
+	
+	</div>
+	
+	
+<style>
+.panel-heading {
+	position: relative;
+	min-height: 40px;
+}
+.sendername {
+	display: inline-block;
+	position: absolute;
+	left: 20;
+}
+.date {
+	display: inline-block;
+	position: absolute;
+	right: 20;
+}
+</style>
+	
+<script>
+
+      var openFile = function(event) {
+        var input = event.target;
+
+        var reader = new FileReader();
+        reader.onload = function(){
+          var text = reader.result;
+          var node = document.getElementById('exp_input');
+          node.value = text;
+          console.log(reader.result.substring(0, 200));
+        };
+        reader.readAsText(input.files[0]);
+		parseText();
+      };
+
+
+parseText = function(){
+	document.getElementsByTagName("button")[0].innerHTML = "Parsing...";
+	document.getElementsByTagName("button")[0].disabled = true;
+	setTimeout(function(){
+	document.getElementById("messageOut").innerHTML = "";
+	textResults = document.getElementById("exp_input").value;
+	//textResults = text;
+	names = [];
+	colors = ["info", "danger", "warning", "success"];
+	splitText = textResults.split("\n");
+    for (i = 0; i < splitText.length; i++){
+		a = i;
+		dateTime = "";
+		name = "";
+		message = "";
+		extraData = "";
+		tempVar = "";
+		color = "danger";
+		if (splitText[a].includes("-") && splitText[a].includes(": ")){
+			dateTime = splitText[a].split(" -")[0];
+			name     = splitText[a].split(" - ")[1].split(": ")[0];
+			if (splitText[a].includes("IMG-")){
+				extraData = splitText[a].split(" - ")[1].split(": ")[1].split(" \(file")[0];
+				tempVar = splitText[a+1];
+				if (tempVar && !tempVar.includes(": ")){
+					message = tempVar + `</br></br>`;
+				}
+				message += `<a href="` + extraData + `">` + extraData + `</a>`;
+			} else {
+				message  = splitText[a].split(" - ")[1].split(": ")[1];
+			}
+			if (!names.includes(name)){
+				names.push(name);
+			}
+			currentColor = colors[names.indexOf(name)];
+			currentHTML = `
+			<div class="panel panel-` + currentColor + `" style="width: 500px">
+			<div class="panel-heading"><div class="sendername"><p>` + name + `</p></div><div class="date"><p>` + dateTime + `</p></div></div>
+			<div class="panel-body">` + message + `</div>
+			</div></br>
+			`;
+			document.getElementById("messageOut").innerHTML += currentHTML;
+		}
+	}
+	setTimeout(function(){
+	document.getElementsByTagName("button")[0].innerHTML = "Parse";
+	document.getElementsByTagName("button")[0].disabled = false;
+	document.getElementById("total").innerHTML = "Total messages: " + document.getElementsByClassName("panel-body").length;
+	}, 500);
+	}, 500);
+}
+</script>
